@@ -181,7 +181,7 @@ button, input { font: inherit; color: inherit; }
 .scene.dragging { cursor: grabbing; }
 .scene-note { margin-top: 8px; font-size: 14px; color: var(--ink-2); }
 .world { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; transition: transform .9s cubic-bezier(.3, 0, .2, 1); }
-.scene.dragging .world { transition: none; }
+.scene.dragging .world, .world.snap, .world.snap .box { transition: none; }
 .world > *, .tower > * { position: absolute; }
 .tower { left: 0; top: 0; transform-style: preserve-3d; cursor: pointer; }
 .box { transform-style: preserve-3d; transition: transform .8s cubic-bezier(.3, 0, .2, 1); }

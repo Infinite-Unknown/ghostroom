@@ -451,6 +451,8 @@ function place3D() {
     const tall = top * sin + (m.w * Math.sin(a) + m.d * Math.cos(a)) * cos + 70;
     zoom = Math.min(1.8, W / wide, H / tall);
   }
+  // the very first placement is instant, so the model is there on load; later moves glide
+  if (!world.dataset.placed) { world.dataset.placed = '1'; world.classList.add('snap'); requestAnimationFrame(() => requestAnimationFrame(() => world.classList.remove('snap'))); }
   world.style.transform = `scale(${zoom.toFixed(3)}) rotateX(${TILT}deg) rotateZ(${rz}deg) translate3d(${-cx}px, ${-cy}px, ${-cz}px)`;
 }
 

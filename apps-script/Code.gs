@@ -194,7 +194,7 @@ function simulate(ctx, start, end, countFrom) {
 
   ctx.idx.rooms.forEach(function (room, ri) {
     var cmds = ctx.commands.filter(function (c) { return c.room === room.room; }).sort(function (a, b) { return a.ts - b.ts; });
-    var ci = 0, emptySince = null, runKwh = 0, setbackUntil = 0, status = null, since = start, ghostH = 0, wasOffline = false, cur = null;
+    var ci = 0, emptySince = null, emptyFrom = 0, runKwh = 0, setbackUntil = 0, status = null, since = start, ghostH = 0, wasOffline = false, cur = null;
     while (ci < cmds.length && cmds[ci].ts <= times[0] - STEP_MS) ci++; // older commands belong to earlier days
 
     times.forEach(function (t) {
@@ -202,7 +202,8 @@ function simulate(ctx, start, end, countFrom) {
       if (offline) { st = 'SENSOR_OFFLINE'; emptySince = null; }  // dead is never "empty"
       else if (r.people > 0) { st = 'IN_USE'; emptySince = null; }
       else if (sess) {
-        if (emptySince === null) emptySince = t;
+        // each booking gets its own 20-min grace and its own empty count (a no-show at 10:00 does not make the 12:00 class a ghost at 12:00)
+        if (emptySince === null || emptyFrom !== sess.from) { emptySince = t; emptyFrom = sess.from; runKwh = 0; }
         st = t - emptySince >= GHOST_AFTER_MS ? 'GHOST' : 'IN_USE'; // ponytail: booked + empty < 20 min is a grace period, still IN_USE
       } else { st = 'FREE'; emptySince = null; }
 
@@ -349,7 +350,7 @@ function selfTest() {
 
   assert(typeof TIMETABLE !== 'undefined', 'Timetable.gs is loaded (if this fails: add the Timetable script file and save)');
   { // the real snapshot loads and the demo scene comes out as promised
-    var t0 = Date.now(), now = Date.now(), ctx = makeCtx(buildIndex(TIMETABLE), { demo_scenario: 'demo' }, {}, [], now);
+    var t0 = Date.now(), now = Date.parse('2026-11-11T15:00:00+08:00'), ctx = makeCtx(buildIndex(TIMETABLE), { demo_scenario: 'demo' }, {}, [], now);
     var rs = simulate(ctx, Math.min(mytMidnight(now), now - LOOKBACK_MS), now, mytMidnight(now)).rooms;
     var by = function (n) { return rs.filter(function (r) { return r.room === n; })[0]; };
     assert(rs.length === TIMETABLE.rooms.length && rs.length <= 60, 'snapshot has ' + rs.length + ' rooms (max 60)');
@@ -361,6 +362,14 @@ function selfTest() {
       return dayStats(c, d0, simulate(c, Math.min(d0, n - LOOKBACK_MS), n, d0)).kwh_wasted;
     };
     assert(wasted('13:58') <= wasted('14:02'), 'demo: kwh_wasted today does not drop at the hour change');
+    assert(wasted('14:28') <= wasted('14:32') && wasted('14:32') <= wasted('14:56'), 'demo: kwh_wasted today does not drop when a new booking starts');
+    var demoAt = function (hm) {
+      var n = Date.parse('2026-11-11T' + hm + ':00+08:00'), c = makeCtx(ctx.idx, { demo_scenario: 'demo' }, {}, [], n), d0 = mytMidnight(n);
+      return simulate(c, Math.min(d0, n - LOOKBACK_MS), n, d0).rooms.filter(function (r) { return r.room === DEMO.ghost; })[0];
+    };
+    var late = demoAt('20:00');
+    assert(late.status === 'GHOST' && late.minutes_empty <= 120, 'demo: empty time restarts with each booking (never more than 2 h)');
+    assert(demoAt('20:40').status === 'IN_USE' && demoAt('20:55').status === 'GHOST', 'demo: a new booking gets its own 20-min grace');
     console.log('full-day compute for ' + rs.length + ' rooms: ' + (Date.now() - t0) + ' ms');
   }
   console.log('selfTest passed');

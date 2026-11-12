@@ -59,7 +59,7 @@ Use the team's personal Google account. No billing needed.
 
 ## Filming the hero shot (demo mode)
 
-1. Sheet → `config` tab → set `demo_scenario` to `demo`. Wait up to 5 min. `D-07-08` is now a ghost room (demo bookings run 06:30–22:30 MYT, so film between 07:00 and 22:30).
+1. Sheet → `config` tab → set `demo_scenario` to `demo`. Wait up to 5 min. `D-07-08` is now a ghost room. Demo bookings are 2 hours long, back to back from 06:30 to 22:30 MYT, and each one starts with a 20-minute grace. **Do not film from 10 minutes before to 20 minutes after a booking change** (the changes are at 08:30, 10:30, 12:30, 14:30, 16:30, 18:30, 20:30). Example: stay out of 20:20–20:50.
 2. On the site: Approve setback, then Walk in.
-3. For another take: in the Apps Script editor run `resetDemo()`. `D-07-08` is a ghost with aircon ON again at once, even if the take stopped after Approve. (Without it, wait about 30 min after Walk in; a setback without Walk in lasts until the 2-hour demo booking ends.)
+3. For another take: in the Apps Script editor run `resetDemo()`. `D-07-08` is a ghost with aircon ON again at once (outside the 20-minute grace), even if the take stopped after Approve. (Without it, wait about 30 min after Walk in; a setback without Walk in lasts until the 2-hour demo booking ends.)
 4. When done, set `demo_scenario` back to `live`.

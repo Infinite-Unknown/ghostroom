@@ -117,7 +117,7 @@ The prototype rules do not require Gemini Enterprise. The finals product will us
    ```bash
    node scripts/fetch-timetable.mjs
    ```
-6. **Demo mode:** in the Sheet's `config` tab set `demo_scenario` to `demo`. Within 5 minutes `D-07-08` is a ghost, `B-05-03` is squatted and `B-08-01` is offline (demo bookings run 06:30 to 22:30 MYT). For another take, run `resetDemo()` in the Apps Script editor. Set `demo_scenario` back to `live` when done.
+6. **Demo mode:** in the Sheet's `config` tab set `demo_scenario` to `demo`. Within 5 minutes `D-07-08` is a ghost, `B-05-03` is squatted and `B-08-01` is offline (demo bookings are 2 hours each, 06:30 to 22:30 MYT; the first 20 minutes of each are a grace period, so the room is not a ghost then). For another take, run `resetDemo()` in the Apps Script editor. Set `demo_scenario` back to `live` when done.
 
 The virtual ESP32 sketch is in [`wokwi/`](wokwi/README.md): paste it into a new Wokwi ESP32 project. It is backup firmware and is not part of the live demo.
 

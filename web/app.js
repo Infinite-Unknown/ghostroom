@@ -165,6 +165,8 @@ function renderHero() {
   if (!r) return;
   const v = view(r), g = ghostOf(r.room);
   $('code').textContent = r.room;
+  // the first starter question follows the room you are looking at
+  $('nearChip').textContent = 'I am near ' + r.room + '. Where is the closest room to study undisturbed?';
   $('meta').textContent = `Block ${r.block} · Floor ${r.floor} · ${r.capacity} seats`;
   $('tt').textContent = r.scheduled_now ? `Booked: ${r.module}, until ${r.class_ends}` : 'Nothing scheduled';
   if (v === 'offline') {

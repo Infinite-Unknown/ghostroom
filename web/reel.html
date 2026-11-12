@@ -237,7 +237,7 @@ h2 { font-size: 76px; font-weight: 700; line-height: 1.08; letter-spacing: -.03e
     <h2 class="b" style="--d:.3s">The timetable is real. The sensors are simulated. We say which is which.</h2>
     <div class="split">
       <div class="card b" style="--d:1s"><p class="k" style="color:var(--eco)">Real</p><ul><li>APU’s public timetable feed</li><li>60 rooms, 3,201 class sessions</li><li>The rules engine and unattended runs</li><li>The chat, answering from live rows</li></ul></div>
-      <div class="card b" style="--d:1.7s"><p class="k" style="color:var(--warn)">Simulated</p><ul><li>Who is in a room</li><li>The aircon relay</li><li>Energy and RM figures: a model</li><li>The no-show rate: assumed, not measured</li></ul></div>
+      <div class="card b" style="--d:1.7s"><p class="k" style="color:var(--warn)">Simulated</p><ul><li>Who is in a room</li><li>The aircon relay</li><li>Energy and RM figures: a model</li><li>The no-show rate: assumed, not measured</li><li>The 3D campus: a sketch, not a survey</li></ul></div>
     </div>
   </section>
 
@@ -260,6 +260,17 @@ h2 { font-size: 76px; font-weight: 700; line-height: 1.08; letter-spacing: -.03e
         <p class="fine">A model, not a measurement: 3.5 kW per room, RM 0.365 per kWh, Eco Mode saving about 60%. The real no-show rate is the first thing a pilot would measure.</p>
       </div>
     </div>
+  </section>
+
+  <section class="scene light" id="sNext">
+    <p class="eyebrow b" style="--d:.1s">With more time</p>
+    <h2 class="b" style="--d:.3s">What we would build next.</h2>
+    <div class="cards">
+      <div class="card b" style="--d:1s"><p class="k" style="color:var(--ink-2)">1 · A measured map</p><h3>From a sketch to the real building.</h3><p>Today the 3D campus is a sketch from the public campus map. With floor plans and a site survey, every room sits where it really is.</p></div>
+      <div class="card b" style="--d:1.8s"><p class="k" style="color:var(--air)">2 · Wi-Fi sensing on the ESP32</p><h3>Sense people through Wi-Fi itself.</h3><p>Bodies disturb Wi-Fi signals. Reading that, called CSI, can tell a still, studying student from an empty room. No camera. No phone needed.</p></div>
+      <div class="card b" style="--d:2.6s"><p class="k" style="color:var(--eco)">3 · Better answers</p><h3>The nearest room that is really quiet.</h3><p>With real positions and real counts, Room Scout can send a student to the closest room that is actually quiet.</p></div>
+    </div>
+    <p class="fine b" style="--d:3.4s">Not built yet. It would sense presence only, never who someone is.</p>
   </section>
 
   <section class="scene dark" id="s9">

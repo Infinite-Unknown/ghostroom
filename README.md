@@ -18,7 +18,7 @@ Open https://ghostroom-mu.vercel.app
 
 1. In the 3D campus model, click **Block B** or **Block D**. The block opens floor by floor. Click a room tile and the room opens as a cutaway. (Drag to turn the model. **Flat** shows the same rooms as plain elevations, and is what phones get.)
 2. Read the two lines: **Timetable says** (what is booked) and **Sensors say** (what is really there).
-3. Use the **Ask Room Scout** box at the top and ask, for example, "Which rooms are really free right now?" It answers only from the live rows.
+3. Use the **Ask Room Scout** box at the top. The first starter question follows the room you picked: "I am near D-07-08. Where is the closest room to study undisturbed?" It answers only from the live rows.
 4. Eco Mode needs a ghost room. Click **A ghost room** under the building, then **Turn on Eco Mode**: the air in the drawing stops and the room turns green. Then click **Walk in**: motion comes back and the aircon returns.
 5. If no room is a ghost at that moment, that is normal (real timetable, simulated people). Try again later, or see "Run it yourself" for demo mode.
 
@@ -142,7 +142,20 @@ data/          timetable-snapshot.json (APU public feed, identifiers stripped)
 - Room capacities are not in the feed, so they are stable made-up sizes.
 - The 3D campus is a sketch from APU's campus map, not to scale. Rooms sit on their real floor; their order along a floor is not surveyed.
 
+- Room Scout knows a room's block and floor from its code, so "closest" means same floor first. It does not know walking distance.
+
+## What we would build next
+
+Not built yet. These are the two things we would do with more time.
+
+1. **A measured campus model.** The 3D campus is a sketch because we had no official floor plans. With plans and a site survey, every room would sit where it really is, and "closest room" would mean real walking distance.
+2. **Wi-Fi sensing on the ESP32 (CSI).** A motion sensor misses a student who is sitting still, so it can call an occupied room empty. People also disturb Wi-Fi signals, and an ESP32 can read that disturbance (channel state information). That can tell a still, studying student from an empty room, and estimate how many people are there. It needs no camera and no phone on the network, and it senses presence, not identity. The same board could then both sense the room and switch the relay.
+
+Why it matters: fewer false ghosts, and Room Scout could send a student to the nearest room that is actually quiet.
+
 ## Research
 
-- Floor-walk audit: [FILL: floor-walk audit: rooms checked, rooms empty, floors, day and times]
-- Survey: [FILL: survey: number of answers and top findings]
+- Data: APU's public weekly timetable feed (31,606 rows, 236 rooms). We track 60 rooms in Blocks B and D: 3,201 class sessions, 288 booked room-hours on an average weekday.
+- Existing tools: APSpace has a classroom finder (timetable only) and an AI chatbot. Neither checks whether a booked room is in use.
+- On site: we photographed the campus model in the lobby and used APU's campus map to lay out the 3D sketch, and drew the room after a real APU classroom.
+- Not done: we did not measure the real no-show rate. The 25% used in the model is an assumption, shown with a 10% to 40% range in the deck.

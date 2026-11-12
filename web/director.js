@@ -108,7 +108,7 @@
     1: async () => {
       await focus(null); await wait(900);
       await focus('.scout', { max: 2 });
-      const chip = document.querySelectorAll('.chip')[1];
+      const chip = $$('#nearChip');                 // "I am near <the selected room>. Where is the closest room to study undisturbed?"
       await moveTo(chip); await press();
       const asking = ask(chip.textContent);
       await wait(900); hideCur();

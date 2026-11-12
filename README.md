@@ -8,7 +8,7 @@
 
 - **Live demo:** https://ghostroom-mu.vercel.app
 - **Video:** [FILL: video URL]
-- **Team:** [FILL: team names and roles]
+- **Team:** The Team (Wong Jia Hern)
 
 Track 1, Smart Campus & Student Experience. APU Cloud Innovation Hackathon 2026, theme "When Cloud, IoT, and Network Converge".
 

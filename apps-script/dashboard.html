@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GhostRoom</title>
+<style>
+  :root { --bg:#0b0f14; --card:#151b23; --fg:#fff; --mut:#b4bfcc; --line:#2b3644;
+    --use:#1b8a3a; --free:#0a7ea4; --ghost:#d97706; --set:#3b5bdb; --off:#5c6670; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:18px/1.4 system-ui,sans-serif; }
+  h1 { margin:0 0 4px; font-size:30px; }
+  h2 { margin:0 0 10px; font-size:22px; }
+  .sub { color:var(--mut); margin-bottom:14px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:16px; }
+  .counters { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:16px; }
+  .counter { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; }
+  .counter b { display:block; font-size:34px; }
+  .counter span { color:var(--mut); font-size:15px; }
+  .legend { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; font-size:15px; }
+  .chip { padding:3px 10px; border-radius:999px; font-weight:700; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:8px; }
+  .tile { border-radius:10px; padding:8px; min-height:78px; border:2px solid rgba(255,255,255,.25); }
+  .tile .r { font-weight:800; font-size:17px; }
+  .tile .s { font-weight:700; font-size:15px; text-transform:uppercase; letter-spacing:.03em; }
+  .tile .p { font-size:14px; opacity:.95; }
+  .IN_USE { background:var(--use); } .FREE { background:var(--free); } .GHOST { background:var(--ghost); }
+  .SETBACK { background:var(--set); } .SENSOR_OFFLINE { background:var(--off); }
+  .row { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--line); }
+  .row:first-of-type { border-top:0; }
+  .row small { color:var(--mut); display:block; font-size:15px; }
+  button { font:inherit; font-weight:800; color:#fff; background:var(--ghost); border:0; border-radius:10px; padding:12px 18px; min-height:48px; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
+  .none { color:var(--mut); }
+  .tick div { padding:5px 0; border-top:1px solid var(--line); font-size:16px; }
+  .tick div:first-child { border-top:0; }
+  .gym { display:flex; gap:16px; flex-wrap:wrap; }
+  .gym div { min-width:100px; } .gym b { font-size:26px; }
+  #chatlog { max-height:260px; overflow:auto; margin-bottom:10px; }
+  .msg { padding:8px 10px; border-radius:10px; margin-bottom:6px; white-space:pre-wrap; }
+  .me { background:#26405f; } .bot { background:#222c38; }
+  form { display:flex; gap:8px; }
+  input { flex:1; min-width:0; font:inherit; padding:12px; border-radius:10px; border:2px solid var(--line); background:#0b0f14; color:#fff; }
+  #err { color:#ffb4a8; font-weight:700; margin-bottom:10px; }
+</style>
+</head>
+<body>
+<h1>GhostRoom</h1>
+<div class="sub" id="meta">Loading…</div>
+<div id="err"></div>
+
+<div class="counters" id="counters"></div>
+
+<div class="card">
+  <h2>Needs review</h2>
+  <div id="review"></div>
+</div>
+
+<div class="card">
+  <h2>Rooms</h2>
+  <div class="legend">
+    <span class="chip IN_USE">In use</span><span class="chip FREE">Free</span><span class="chip GHOST">Ghost</span>
+    <span class="chip SETBACK">Setback</span><span class="chip SENSOR_OFFLINE">Sensor offline</span>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="card" id="gymcard" hidden>
+  <h2>Gym right now</h2>
+  <div class="gym" id="gym"></div>
+</div>
+
+<div class="card">
+  <h2>Room Scout</h2>
+  <div id="chatlog"></div>
+  <form id="chatform">
+    <input id="q" maxlength="300" placeholder="Which rooms are really free now?" autocomplete="off">
+    <button type="submit" id="ask">Ask</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Recent events</h2>
+  <div class="tick" id="ticker"></div>
+</div>
+
+<script>
+// Runs inside the Apps Script iframe: google.script.run is the call that works there (fetch to /exec does not).
+var TARIFF = 0.365; // ponytail: matches the config default; state JSON has no tariff, so RM recovered = kWh recovered x this
+var LABEL = { IN_USE: 'In use', FREE: 'Free', GHOST: 'Ghost', SETBACK: 'Setback', SENSOR_OFFLINE: 'Sensor offline' };
+var $ = function (id) { return document.getElementById(id); };
+var esc = function (s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); };
+var busy = {};
+
+function run(fn /*, args */) {
+  var args = [].slice.call(arguments, 1);
+  return new Promise(function (ok, bad) {
+    google.script.run.withSuccessHandler(ok).withFailureHandler(bad)[fn].apply(null, args);
+  });
+}
+
+function tileStatus(r) { return r.status !== 'SENSOR_OFFLINE' && r.aircon === 'SETBACK' ? 'SETBACK' : r.status; }
+
+function render(s) {
+  if (!s || !s.rooms) { $('err').textContent = (s && s.error) || 'No data yet.'; return; }
+  $('err').textContent = '';
+  var c = s.counters, t = c.today || {};
+  $('meta').textContent = 'Updated ' + s.generated_at + ' MYT · ' + c.rooms + ' rooms · simulated sensors, real APU timetable';
+  var cards = [
+    [t.ghost_room_hours, 'ghost room-hours today'],
+    ['RM ' + Number(t.rm_wasted || 0).toFixed(2), 'wasted today'],
+    ['RM ' + (Number(t.kwh_recovered || 0) * TARIFF).toFixed(2), 'recovered today'],
+    [c.ghost, 'ghost rooms now'], [c.free, 'really free now'], [c.offline, 'sensors offline']
+  ];
+  $('counters').innerHTML = cards.map(function (x) { return '<div class="counter"><b>' + esc(x[0]) + '</b><span>' + x[1] + '</span></div>'; }).join('');
+
+  $('grid').innerHTML = s.rooms.map(function (r) {
+    var st = tileStatus(r), p = r.people === null ? 'no signal' : r.people + ' people';
+    return '<div class="tile ' + st + '"><div class="r">' + esc(r.room) + '</div><div class="s">' + LABEL[st] + '</div><div class="p">' +
+      p + (r.scheduled_now ? ' · booked' : '') + '</div></div>';
+  }).join('');
+
+  $('review').innerHTML = s.ghost_now.length ? s.ghost_now.map(function (g) {
+    var done = s.rooms.filter(function (r) { return r.room === g.room; })[0];
+    var already = done && done.aircon === 'SETBACK';
+    return '<div class="row"><div><b>' + esc(g.room) + '</b> · ' + esc(g.module) + '<small>empty ' + g.minutes_empty + ' min · RM ' +
+      g.est_rm + ' wasted · ghost ' + g.ghost_count_7d + 'x this week</small></div>' +
+      '<button data-room="' + esc(g.room) + '"' + (busy[g.room] || already ? ' disabled' : '') + '>' + (already ? 'Set back' : busy[g.room] ? 'Working…' : 'Approve') + '</button></div>';
+  }).join('') : '<div class="none">No ghost rooms right now.</div>';
+
+  $('ticker').innerHTML = s.commands.length ? s.commands.map(function (m) {
+    return '<div>' + esc(m.ts.slice(11)) + ' · <b>' + esc(m.room) + '</b> ' + esc(m.action) + ' by ' + esc(m.by) + ' (' + esc(m.state) + ')</div>';
+  }).join('') : '<div class="none">No commands yet.</div>';
+
+  var gym = (s.gym || []).filter(function (z) { return z.capacity; });
+  $('gymcard').hidden = !gym.length;
+  $('gym').innerHTML = gym.map(function (z) { return '<div><b>' + z.people + '/' + z.capacity + '</b><br>' + esc(z.zone) + '</div>'; }).join('');
+}
+
+function refresh() {
+  return run('dashState').then(render).catch(function (e) { $('err').textContent = 'Could not load: ' + (e && e.message || e); });
+}
+
+$('review').addEventListener('click', function (e) {
+  var room = e.target.getAttribute && e.target.getAttribute('data-room');
+  if (!room || busy[room]) return;
+  busy[room] = true; e.target.disabled = true; e.target.textContent = 'Working…';
+  run('dashApprove', room).then(function (r) {
+    if (!r.ok) $('err').textContent = r.error;
+    return refresh();
+  }).catch(function (err) { $('err').textContent = 'Approve failed: ' + (err && err.message || err); })
+    .then(function () { delete busy[room]; return refresh(); });
+});
+
+function say(cls, text) {
+  var d = document.createElement('div'); d.className = 'msg ' + cls; d.textContent = text;
+  $('chatlog').appendChild(d); $('chatlog').scrollTop = 1e9; return d;
+}
+$('chatform').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var text = $('q').value.trim(); if (!text) return;
+  $('q').value = ''; $('ask').disabled = true; say('me', text);
+  var wait = say('bot', '…');
+  run('dashAsk', text).then(function (r) { wait.textContent = r.answer || r.error || 'No answer.'; })
+    .catch(function (err) { wait.textContent = 'Room Scout could not be reached: ' + (err && err.message || err); })
+    .then(function () { $('ask').disabled = false; });
+});
+
+refresh();
+setInterval(refresh, 10000);
+</script>
+</body>
+</html>

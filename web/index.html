@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GhostRoom</title>
+<meta name="description" content="APSpace shows what is scheduled. GhostRoom shows what is true.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="boot">
+
+<header class="top">
+  <div class="wrap bar">
+    <div class="brand">
+      <span class="wordmark">GhostRoom</span>
+      <span class="pitch">APSpace shows what is scheduled. GhostRoom shows what is true.</span>
+    </div>
+    <div class="top-right">
+      <span id="stamp" class="stamp mono">CONNECTING…</span>
+      <button id="scoutOpen" class="btn btn-outline btn-sm" type="button" aria-expanded="false" aria-controls="scout">Ask Room Scout</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <p id="boot" class="boot-msg" role="status">
+    <span class="boot-loading">Loading live room data…</span>
+    <span class="boot-fail-text">Cannot reach the back end. Retrying every 10 seconds.</span>
+  </p>
+
+  <section class="numbers" aria-label="Right now">
+    <div class="num">
+      <span id="nGhost" class="big c-ghost">0</span>
+      <span class="num-lbl">ghost rooms now</span>
+      <span class="num-sub">booked, empty, aircon on</span>
+    </div>
+    <div class="num">
+      <span id="nWasted" class="big c-warn">RM 0.00</span>
+      <span class="num-lbl">wasted today</span>
+      <span id="sWasted" class="num-sub">&nbsp;</span>
+    </div>
+    <div class="num">
+      <span id="nRecovered" class="big c-free">RM 0.00</span>
+      <span class="num-lbl">recovered today</span>
+      <span class="num-sub">by approved setbacks</span>
+    </div>
+    <div class="num">
+      <span id="nFree" class="big">0</span>
+      <span class="num-lbl">rooms really free now</span>
+      <span id="sFree" class="num-sub">&nbsp;</span>
+    </div>
+  </section>
+
+  <section class="hero" id="hero" aria-label="Selected room">
+    <div class="case panel">
+      <div id="code" class="code mono">&nbsp;</div>
+      <div id="meta" class="meta">&nbsp;</div>
+
+      <dl class="facts">
+        <div class="fact">
+          <dt class="label">Timetable says</dt>
+          <dd id="tt">&nbsp;</dd>
+        </div>
+        <div class="fact">
+          <dt class="label">Sensors say</dt>
+          <dd id="sensors">&nbsp;</dd>
+        </div>
+      </dl>
+
+      <div class="verdict" aria-live="polite">
+        <div id="vWord" class="v-word">&nbsp;</div>
+        <p id="vLine" class="v-line">&nbsp;</p>
+        <p id="vCost" class="v-cost"></p>
+      </div>
+
+      <div class="actions">
+        <button id="approve" class="btn btn-primary" type="button" aria-describedby="approveWhy">Approve setback</button>
+        <button id="walk" class="btn btn-outline" type="button">Walk in</button>
+      </div>
+      <p id="approveWhy" class="helper"></p>
+      <p id="actMsg" class="act-msg" role="status"></p>
+
+      <p class="footnote label">Simulated room · drawn from live data</p>
+    </div>
+
+    <div class="draw panel grid-bg" id="draw"></div>
+  </section>
+
+  <section class="panel building" aria-labelledby="campusTitle">
+    <div class="panel-head">
+      <h2 id="campusTitle">Campus now</h2>
+      <p id="legend" class="legend"></p>
+    </div>
+    <div id="blocks" class="blocks grid-bg"></div>
+  </section>
+
+  <section class="lists">
+    <div class="panel list-panel">
+      <h2>Ghost rooms to review</h2>
+      <ul id="ghostList" class="rows"></ul>
+      <button id="ghostMore" class="link more" type="button" hidden></button>
+    </div>
+    <div class="panel list-panel">
+      <h2>Really free now</h2>
+      <ul id="freeList" class="rows"></ul>
+      <button id="freeMore" class="link more" type="button" hidden></button>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <ul id="cmds" class="cmds mono"></ul>
+  <p id="gym" class="gym" hidden></p>
+  <p class="disclaim">Occupancy is simulated. Timetable is APU's real open feed. No personal data.</p>
+</footer>
+
+<aside id="scout" class="drawer" aria-labelledby="scoutTitle" inert>
+  <div class="drawer-head">
+    <div>
+      <h2 id="scoutTitle">Room Scout</h2>
+      <p class="drawer-sub">Answers only from the live room data</p>
+    </div>
+    <button id="scoutClose" class="icon-btn" type="button" aria-label="Close Room Scout">×</button>
+  </div>
+  <div class="chips">
+    <button class="chip" type="button">Which rooms are really free now?</button>
+    <button class="chip" type="button">Any free room for 40 people in Block D?</button>
+    <button class="chip" type="button">Which rooms are being wasted?</button>
+  </div>
+  <ol id="msgs" class="msgs" aria-live="polite"></ol>
+  <form id="askForm" class="ask">
+    <label for="askInput" class="sr-only">Ask Room Scout</label>
+    <input id="askInput" type="text" maxlength="300" autocomplete="off" placeholder="Ask about rooms right now">
+    <button class="btn btn-ink btn-sm" type="submit">Ask</button>
+  </form>
+</aside>
+
+<div id="tip" class="tip mono" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>

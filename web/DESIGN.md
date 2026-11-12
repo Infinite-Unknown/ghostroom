@@ -1,5 +1,7 @@
 # GhostRoom website — design spec (v1, 11 Nov)
 
+> **v2 (12 Nov), supersedes the page layout below.** Ink title block on top with the pitch and a large **Ask Room Scout** box (always visible, no drawer). Then four numbers. Then one workbench: the building on the left (two stacked elevations, wide windows, example buttons under it) and the selected room on the right (code and verdict, section drawing, "Timetable says / Sensors say", actions). Then three lists: ghost rooms to review, really free now, activity. The action is called **Turn on Eco Mode** (the back end still calls it `SETBACK`); Eco Mode is drawn in green. Tokens, type and the drawing rules below still apply.
+
 The builder follows this. The designer (main session) reviews against it. If something here cannot work, say so; do not quietly swap it.
 
 ## The one idea

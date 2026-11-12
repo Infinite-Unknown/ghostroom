@@ -18,8 +18,8 @@ Open https://ghostroom-mu.vercel.app
 
 1. Click a window in the building drawing. The room opens as a cutaway.
 2. Read the two lines: **Timetable says** (what is booked) and **Sensors say** (what is really there).
-3. Click **Ask Room Scout** and ask, for example, "Which rooms are really free right now?" It answers only from the live rows.
-4. Approve needs a ghost room. If a room is marked as a ghost, click **Approve setback**: the aircon in the drawing dims. Then click **Walk in**: motion comes back and the aircon returns.
+3. Use the **Ask Room Scout** box at the top and ask, for example, "Which rooms are really free right now?" It answers only from the live rows.
+4. Eco Mode needs a ghost room. Click **A ghost room** under the building, then **Turn on Eco Mode**: the air in the drawing stops and the room turns green. Then click **Walk in**: motion comes back and the aircon returns.
 5. If no room is a ghost at that moment, that is normal (real timetable, simulated people). Try again later, or see "Run it yourself" for demo mode.
 
 ## Architecture
@@ -46,7 +46,7 @@ flowchart LR
   GAS <--> SHEET
   GAS <-->|questions and answers| GEM
   GAS -->|commands| API
-  API -->|setback / release| RELAY
+  API -->|Eco Mode on / off| RELAY
   WEB <-->|state, approve, ask| API
 ```
 
@@ -61,7 +61,8 @@ flowchart LR
 |---|---|
 | Ghost room | Booked on the timetable and empty for 20 minutes |
 | Sensor offline | No heartbeat for 15 minutes. Never called free, never set back |
-| Motion | Always overrides a setback and turns the aircon back on |
+| Eco Mode | One click by a person sets a ghost room's aircon back (the back end calls this `SETBACK`) |
+| Motion | Always overrides Eco Mode and turns the aircon back on |
 | Recompute | Every 5 minutes (`tick`). State is a pure function of time, timetable, seed and overrides, so a missed tick corrupts nothing |
 | Morning brief | Email at 07:30 (Google runs it within about 15 minutes of that), every run logged in `runs` |
 
@@ -90,8 +91,8 @@ POST bodies are sent as `text/plain` so the browser needs no preflight.
 | Real | Simulated |
 |---|---|
 | APU's public timetable feed: 60 rooms in Blocks B and D, 3,201 sessions, lecturer and student identifiers stripped | Occupancy: a seeded simulator stands in for Wi-Fi counts and PIR sensors |
-| The rules engine (ghost, offline, setback, motion override) | The aircon relay: no real APU equipment is touched |
-| Unattended runs: the 07:30 email ran by itself on 10, 11 and 12 Nov | Energy and RM figures: a model of 3.5 kW per room, RM 0.365/kWh, and a setback that saves about 60% |
+| The rules engine (ghost, offline, Eco Mode, motion override) | The aircon relay: no real APU equipment is touched |
+| Unattended runs: the 07:30 email ran by itself on 10, 11 and 12 Nov | Energy and RM figures: a model of 3.5 kW per room, RM 0.365/kWh, and an Eco Mode setback that saves about 60% |
 | The Gemini-backed chat, grounded on live rows | |
 
 ## Prototype now, Gemini Enterprise for finals

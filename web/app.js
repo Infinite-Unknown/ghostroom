@@ -76,7 +76,8 @@ function view(r) {
   if (r.status === 'IN_USE') return 'inuse';
   return 'free';
 }
-const WORD = { ghost: 'Ghost', setback: 'Setback', inuse: 'In use', free: 'Free', offline: 'Sensor offline' };
+const WORD = { ghost: 'Ghost', setback: 'Eco Mode', inuse: 'In use', free: 'Free', offline: 'Sensor offline' };
+const AIRCON = { ON: 'ON', OFF: 'OFF', SETBACK: 'ECO' }; // the back end calls Eco Mode "SETBACK"
 
 function initialRoom() {
   const q = (new URLSearchParams(location.search).get('room') || '').trim().toUpperCase();
@@ -149,14 +150,14 @@ const VERDICT = {
     const f = freeOf(r.room);
     return f && f.free_until ? `Empty and not booked. Free until ${f.free_until}.` : 'Empty and not booked. Free for the rest of the day.';
   },
-  setback: () => 'Aircon set back. It comes back on the moment someone walks in.',
+  setback: () => 'Aircon is in Eco Mode. It comes back on the moment someone walks in.',
   offline: () => 'We cannot see this room, so we do not touch it.',
 };
 const WHY_NOT = {
-  inuse: 'Only ghost rooms can be set back. This room is not a ghost right now.',
-  free: 'Only ghost rooms can be set back. Nothing is booked here and the aircon is off.',
-  setback: 'Already set back.',
-  offline: 'Sensor offline. We never set back a room we cannot see.',
+  inuse: 'Eco Mode is for ghost rooms only. This room is not a ghost right now.',
+  free: 'Eco Mode is for ghost rooms only. Nothing is booked here and the aircon is off.',
+  setback: 'Eco Mode is already on.',
+  offline: 'Sensor offline. We never change a room we cannot see.',
 };
 
 function renderHero() {
@@ -174,7 +175,7 @@ function renderHero() {
     $('sensors').textContent = s;
   }
   const word = $('vWord');
-  word.textContent = { ghost: 'GHOST', inuse: 'IN USE', free: 'FREE', setback: 'SETBACK', offline: 'SENSOR OFFLINE' }[v];
+  word.textContent = { ghost: 'GHOST', inuse: 'IN USE', free: 'FREE', setback: 'ECO MODE', offline: 'SENSOR OFFLINE' }[v];
   word.className = `v-word ${v}`;
   $('vLine').textContent = VERDICT[v](r);
   $('vCost').textContent = v === 'ghost' && g ? `${rm(g.est_rm)} wasted so far · ${plural(g.ghost_count_7d, 'time', 'times')} this week` : '';
@@ -311,10 +312,10 @@ function drawRoom(r, v, g) {
   else if (people > 0) pir = 'PIR · MOTION NOW';
   else if ((v === 'ghost' || v === 'setback') && g) pir = `PIR · MOTION ${g.minutes_empty} MIN AGO`;
   $('lPir').textContent = pir;
-  $('lAc').textContent = `AC · ${r.aircon}`;
+  $('lAc').textContent = `AC · ${AIRCON[r.aircon] || r.aircon}`;
   $('lRelay').textContent = `RELAY · ${airOn ? 'CLOSED' : 'OPEN'}`;
   $('lTitle').textContent = `SECTION · ${r.room} · SIMULATED ROOM`;
-  $('roomDesc').textContent = `${r.room}: ${WORD[v]}. ${v === 'offline' ? 'No sensor signal' : plural(people, 'person', 'people')}. Aircon ${r.aircon.toLowerCase()}.`;
+  $('roomDesc').textContent = `${r.room}: ${WORD[v]}. ${v === 'offline' ? 'No sensor signal' : plural(people, 'person', 'people')}. Aircon ${r.aircon === 'SETBACK' ? 'in Eco Mode' : r.aircon.toLowerCase()}.`;
 }
 
 // Walk in: plays only after the back end has confirmed the motion and returned the new state.
@@ -363,6 +364,9 @@ function renderBuilding() {
         .map((r) => `<button class="win" type="button" data-room="${esc(r.room)}"></button>`).join('')}</div>`).join('');
       return `<div class="block"><div class="block-name label">Block ${esc(b)}</div><div class="elev">${rows}</div><div class="ground"></div></div>`;
     }).join('');
+    const perFloor = {};
+    S.rooms.forEach((r) => { const k = `${r.block}-${r.floor}`; perFloor[k] = (perFloor[k] || 0) + 1; });
+    host.style.setProperty('--cols', Math.max(1, ...Object.values(perFloor)));
   }
   const counts = { inuse: 0, free: 0, ghost: 0, setback: 0, offline: 0 };
   host.querySelectorAll('.win').forEach((w) => {
@@ -454,8 +458,13 @@ function more(btn, n, which) {
 }
 
 function renderFooter() {
-  setHTML($('cmds'), (S.commands || []).slice(0, 5)
-    .map((c) => `<li>${esc(fmtTs(c.ts))} · ${esc(c.room)} · ${esc(c.action)} · by ${esc(c.by)}</li>`).join(''));
+  const did = { SETBACK: 'Eco Mode on', RELEASE: 'Eco Mode off' };
+  const cmds = (S.commands || []).slice(0, 6);
+  setHTML($('cmds'), cmds.length ? cmds.map((c) => `<li>
+      <span class="r-t">${esc(fmtTs(c.ts))}</span>
+      <span class="r-code">${esc(c.room)}</span>
+      <span>${esc(did[c.action] || c.action)} <span class="r-by">· by ${esc(c.by)}</span></span>
+    </li>`).join('') : '<li class="empty">Nothing yet. Turn on Eco Mode for a ghost room and it shows here.</li>');
   const gym = S.gym || [];
   $('gym').hidden = !gym.length;
   $('gym').textContent = gym.length ? `Gym: ${gym.map((z) => `${z.zone} ${z.people}/${z.capacity}`).join(' · ')}` : '';
@@ -480,7 +489,7 @@ function say(text, ok) {
 }
 const errLine = (e) => (e && e.name === 'AbortError' ? 'The back end took too long. Try again.'
   : e instanceof TypeError ? 'Cannot reach the back end. Check the connection and try again.'
-  : `Not done: ${e.message || e}`);
+  : `Not done: ${String(e.message || e).replace('already set back', 'already in Eco Mode').replace('can be set back', 'can use Eco Mode')}`);
 
 function applyRoom(row) {
   if (!row || !row.room) return;
@@ -495,10 +504,10 @@ async function onApprove() {
   const id = sel, btn = $('approve'), svg = $('room');
   say('');
   busy = true;
-  working(btn, 'Approving…');
+  working(btn, 'Turning on…');
   $('walk').disabled = true;
   svg.classList.add('s-sending');
-  $('lRelay').textContent = 'RELAY · SENDING SETBACK…';
+  $('lRelay').textContent = 'RELAY · SENDING ECO MODE…';
   try {
     const res = await post({ type: 'approve', room: id });
     if (!res || !res.ok) throw new Error((res && res.error) || 'no answer');
@@ -545,21 +554,13 @@ async function onWalk() {
 }
 
 // ---------------- Room Scout ----------------
-function scout(open) {
-  const d = $('scout');
-  d.classList.toggle('open', open);
-  d.inert = !open;
-  $('scoutOpen').setAttribute('aria-expanded', String(open));
-  if (open) setTimeout(() => $('askInput').focus(), 50);
-  else $('scoutOpen').focus({ preventScroll: true });
-}
-
 function addMsg(cls, text) {
   const li = document.createElement('li');
   li.className = cls;
   li.textContent = text;
-  $('msgs').appendChild(li);
-  li.scrollIntoView({ block: 'nearest' });
+  const list = $('msgs');
+  list.appendChild(li);
+  list.scrollTop = list.scrollHeight;
   return li;
 }
 
@@ -569,7 +570,8 @@ async function ask(text) {
   const form = $('askForm');
   addMsg('me', text);
   const a = addMsg('bot thinking', 'thinking…');
-  form.querySelectorAll('input, button').forEach((el) => { el.disabled = true; });
+  const controls = [...form.querySelectorAll('input, button'), ...document.querySelectorAll('.chip')];
+  controls.forEach((el) => { el.disabled = true; });
   try {
     const res = await post({ type: 'ask', text });
     a.textContent = (res && (res.answer || res.error)) || 'No answer.';
@@ -579,9 +581,9 @@ async function ask(text) {
     a.classList.add('err');
   } finally {
     a.classList.remove('thinking');
-    a.scrollIntoView({ block: 'nearest' });
-    form.querySelectorAll('input, button').forEach((el) => { el.disabled = false; });
-    $('askInput').focus();
+    $('msgs').scrollTop = $('msgs').scrollHeight;
+    controls.forEach((el) => { el.disabled = false; });
+    $('askInput').focus({ preventScroll: true });
   }
 }
 
@@ -615,16 +617,6 @@ function init() {
   $('approve').addEventListener('click', onApprove);
   $('walk').addEventListener('click', onWalk);
 
-  $('scoutOpen').addEventListener('click', () => scout(!$('scout').classList.contains('open')));
-  $('scoutClose').addEventListener('click', () => scout(false));
-  const scoutOpen = () => $('scout').classList.contains('open');
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && scoutOpen()) { e.preventDefault(); scout(false); } }, true);
-  document.addEventListener('pointerdown', (e) => {
-    if (!scoutOpen() || $('scout').contains(e.target) || $('scoutOpen').contains(e.target)) return;
-    scout(false);
-    // the click itself moves focus; give it back to the button unless it landed on another control
-    setTimeout(() => { if (document.activeElement === document.body) $('scoutOpen').focus({ preventScroll: true }); }, 0);
-  });
   document.querySelectorAll('.chip').forEach((c) => c.addEventListener('click', () => ask(c.textContent)));
   $('askForm').addEventListener('submit', (e) => { e.preventDefault(); const i = $('askInput'); const t = i.value; i.value = ''; ask(t); });
 

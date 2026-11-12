@@ -12,16 +12,34 @@
 </head>
 <body class="boot">
 
-<header class="top">
-  <div class="wrap bar">
-    <div class="brand">
-      <span class="wordmark">GhostRoom</span>
-      <span class="pitch">APSpace shows what is scheduled. GhostRoom shows what is true.</span>
+<header class="mast">
+  <div class="wrap mast-grid">
+    <div class="mast-brand">
+      <div class="mast-top">
+        <span class="wordmark">GhostRoom</span>
+        <span id="stamp" class="stamp mono">CONNECTING…</span>
+      </div>
+      <h1 class="pitch"><span>APSpace shows what is scheduled.</span> GhostRoom shows what is true.</h1>
+      <p class="mast-sub">It finds rooms that are booked but empty, with the aircon still on. The timetable is APU's real feed. The sensors are simulated.</p>
     </div>
-    <div class="top-right">
-      <span id="stamp" class="stamp mono">CONNECTING…</span>
-      <button id="scoutOpen" class="btn btn-outline btn-sm" type="button" aria-expanded="false" aria-controls="scout">Ask Room Scout</button>
-    </div>
+
+    <section class="scout" aria-labelledby="scoutTitle">
+      <div class="scout-head">
+        <h2 id="scoutTitle">Ask Room Scout</h2>
+        <p class="scout-sub">Answers only from the live room data</p>
+      </div>
+      <ol id="msgs" class="msgs" aria-live="polite"></ol>
+      <form id="askForm" class="ask">
+        <label for="askInput" class="sr-only">Ask Room Scout</label>
+        <input id="askInput" type="text" maxlength="300" autocomplete="off" placeholder="Ask about rooms right now">
+        <button class="btn btn-ink btn-lg" type="submit">Ask</button>
+      </form>
+      <div class="chips">
+        <button class="chip" type="button">Which rooms are really free now?</button>
+        <button class="chip" type="button">A free room for 40 in Block D?</button>
+        <button class="chip" type="button">Which rooms are being wasted?</button>
+      </div>
+    </section>
   </div>
 </header>
 
@@ -45,7 +63,7 @@
     <div class="num">
       <span id="nRecovered" class="big c-free">RM 0.00</span>
       <span class="num-lbl">recovered today</span>
-      <span class="num-sub">by approved setbacks</span>
+      <span class="num-sub">by Eco Mode</span>
     </div>
     <div class="num">
       <span id="nFree" class="big">0</span>
@@ -54,15 +72,34 @@
     </div>
   </section>
 
-  <nav class="examples" aria-label="Example rooms">
-    <span id="exLabel" class="label">Examples right now</span>
-    <div id="exList" class="ex-list"></div>
-  </nav>
+  <section class="bench" aria-label="Campus and selected room">
+    <div class="panel building" aria-labelledby="campusTitle">
+      <div class="panel-head">
+        <h2 id="campusTitle">Campus now</h2>
+        <p class="panel-sub">Every window is a room. Click one to open it.</p>
+      </div>
+      <p id="legend" class="legend"></p>
+      <div id="blocks" class="blocks"></div>
+      <nav class="examples" aria-label="Example rooms">
+        <span id="exLabel" class="label">Examples right now</span>
+        <div id="exList" class="ex-list"></div>
+      </nav>
+    </div>
 
-  <section class="hero" id="hero" aria-label="Selected room">
-    <div class="case panel">
-      <div id="code" class="code mono">&nbsp;</div>
-      <div id="meta" class="meta">&nbsp;</div>
+    <div class="panel room" id="hero" aria-label="Selected room">
+      <div class="room-head">
+        <div>
+          <div id="code" class="code mono">&nbsp;</div>
+          <div id="meta" class="meta">&nbsp;</div>
+        </div>
+        <div class="verdict" aria-live="polite">
+          <div id="vWord" class="v-word">&nbsp;</div>
+          <p id="vLine" class="v-line">&nbsp;</p>
+          <p id="vCost" class="v-cost"></p>
+        </div>
+      </div>
+
+      <div class="draw grid-bg" id="draw"></div>
 
       <dl class="facts">
         <div class="fact">
@@ -75,31 +112,14 @@
         </div>
       </dl>
 
-      <div class="verdict" aria-live="polite">
-        <div id="vWord" class="v-word">&nbsp;</div>
-        <p id="vLine" class="v-line">&nbsp;</p>
-        <p id="vCost" class="v-cost"></p>
-      </div>
-
       <div class="actions">
-        <button id="approve" class="btn btn-primary" type="button" aria-describedby="approveWhy">Approve setback</button>
-        <button id="walk" class="btn btn-outline" type="button">Walk in</button>
+        <button id="approve" class="btn btn-primary btn-lg" type="button" aria-describedby="approveWhy">Turn on Eco Mode</button>
+        <button id="walk" class="btn btn-outline btn-lg" type="button">Walk in</button>
+        <p id="approveWhy" class="helper"></p>
       </div>
-      <p id="approveWhy" class="helper"></p>
       <p id="actMsg" class="act-msg" role="status"></p>
-
       <p class="footnote label">Simulated room · drawn from live data</p>
     </div>
-
-    <div class="draw panel grid-bg" id="draw"></div>
-  </section>
-
-  <section class="panel building" aria-labelledby="campusTitle">
-    <div class="panel-head">
-      <h2 id="campusTitle">Campus now</h2>
-      <p id="legend" class="legend"></p>
-    </div>
-    <div id="blocks" class="blocks grid-bg"></div>
   </section>
 
   <section class="lists">
@@ -113,35 +133,17 @@
       <ul id="freeList" class="rows"></ul>
       <button id="freeMore" class="link more" type="button" hidden></button>
     </div>
+    <div class="panel list-panel">
+      <h2>Activity</h2>
+      <ul id="cmds" class="rows cmds"></ul>
+      <p id="gym" class="gym" hidden></p>
+    </div>
   </section>
 </main>
 
 <footer class="wrap foot">
-  <ul id="cmds" class="cmds mono"></ul>
-  <p id="gym" class="gym" hidden></p>
-  <p class="disclaim">Occupancy is simulated. Timetable is APU's real open feed. No personal data.</p>
+  <p class="disclaim">Occupancy and the aircon relay are simulated. The timetable is APU's real open feed. No personal data.</p>
 </footer>
-
-<aside id="scout" class="drawer" aria-labelledby="scoutTitle" inert>
-  <div class="drawer-head">
-    <div>
-      <h2 id="scoutTitle">Room Scout</h2>
-      <p class="drawer-sub">Answers only from the live room data</p>
-    </div>
-    <button id="scoutClose" class="icon-btn" type="button" aria-label="Close Room Scout">×</button>
-  </div>
-  <div class="chips">
-    <button class="chip" type="button">Which rooms are really free now?</button>
-    <button class="chip" type="button">Any free room for 40 people in Block D?</button>
-    <button class="chip" type="button">Which rooms are being wasted?</button>
-  </div>
-  <ol id="msgs" class="msgs" aria-live="polite"></ol>
-  <form id="askForm" class="ask">
-    <label for="askInput" class="sr-only">Ask Room Scout</label>
-    <input id="askInput" type="text" maxlength="300" autocomplete="off" placeholder="Ask about rooms right now">
-    <button class="btn btn-ink btn-sm" type="submit">Ask</button>
-  </form>
-</aside>
 
 <div id="tip" class="tip mono" hidden></div>
 

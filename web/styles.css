@@ -259,6 +259,11 @@ button, input { font: inherit; color: inherit; }
 .sv-title { font: 400 15px var(--mono); letter-spacing: .06em; fill: var(--ink-2); }
 .sv-leader { stroke: var(--ink-2); stroke-width: 1; fill: none; }
 .sv-dot { fill: var(--ink); }
+/* The two things everyone knows about an APU classroom: wood desks and blue chairs. Kept as quiet tints. */
+.sv-desk { fill: #F1CFA8; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+.sv-chair { stroke: #2C6E91; stroke-width: 3.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.sv-far { stroke: var(--ink-2); stroke-width: 1; fill: none; opacity: .38; }
+.ac-body { fill: var(--ink); stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; }
 
 .door-gap { fill: var(--ink); opacity: 0; transition: opacity .3s; }
 .leaf { transform-box: fill-box; transform-origin: 0 50%; transition: transform .35s cubic-bezier(.3, 0, .2, 1); }
@@ -289,15 +294,18 @@ button, input { font: inherit; color: inherit; }
 .s-air .air { opacity: 1; }
 .air path { stroke: var(--air); stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-dasharray: 14 18; animation: flow 4s linear infinite; }
 @keyframes flow { to { stroke-dashoffset: -64; } }
-.louvre { stroke: var(--ink); stroke-width: 2.5; stroke-linecap: round; transform-box: view-box; transform-origin: 748px 159px; transition: transform .6s ease; }
-.s-air .louvre { transform: rotate(-24deg); }
+.louvre { stroke: var(--ink); stroke-width: 2.5; stroke-linecap: round; transform-box: view-box; transition: transform .6s ease; }
+.louvre.l1 { transform-origin: 572px 129px; }
+.louvre.l2 { transform-origin: 628px 129px; }
+.s-air .louvre.l1 { transform: rotate(-30deg); }
+.s-air .louvre.l2 { transform: rotate(30deg); }
 
 .led { fill: var(--sheet); stroke: var(--ink); stroke-width: 2; transition: fill .3s; }
 .s-relay .led { fill: var(--ink); }
 .s-sending .led { animation: blink .6s steps(1) infinite; }
 @keyframes blink { 0% { fill: var(--ink); } 50% { fill: var(--sheet); } }
 .sv-send { fill: var(--ink); }
-.lever { transform-box: view-box; transform-origin: 650px 101px; transform: rotate(-38deg); transition: transform .3s cubic-bezier(.3, 0, .2, 1); }
+.lever { transform-box: view-box; transform-origin: 710px 103px; transform: rotate(-38deg); transition: transform .3s cubic-bezier(.3, 0, .2, 1); }
 .s-relay .lever { transform: rotate(38deg); }
 .lever line { stroke: var(--ink); stroke-width: 2.5; stroke-linecap: round; }
 .lever circle { fill: var(--ink); }

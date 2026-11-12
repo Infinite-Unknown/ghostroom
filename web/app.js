@@ -186,22 +186,25 @@ function renderHero() {
 }
 
 // ---------------- the section drawing ----------------
-const ROWS = [176, 390, 604];
-const SEAT_X = ROWS.flatMap((x0) => [0, 1, 2, 3].map((i) => x0 + i * 46));
-const ORDER = [5, 1, 9, 6, 2, 10, 4, 0, 8, 7, 3, 11]; // seat fill order, spread across the rows
+// Drawn after a real APU classroom: rows of long desks facing the screen, a ceiling cassette aircon,
+// a ceiling projector and a glazed wall behind. The front of the room is on the left.
+const SEAT_X = [196, 272, 348, 424, 500, 576, 652, 728]; // one seat shown per row of desks
+const ORDER = [3, 5, 1, 6, 2, 4, 0, 7];                   // seat fill order, spread across the rows
 const DOOR_X = 106, WALK_Y = 338;
-// Streamlines: leave the louvre, sweep left across the room and drop to desk level.
+// Streamlines leave both sides of the cassette, sweep out across the room and drop to desk level.
 const AIR = [
-  'M704 162 C560 150 380 162 230 318',
-  'M708 165 C590 166 440 196 330 326',
-  'M714 167 C620 182 500 226 430 330',
-  'M722 169 C650 200 580 252 530 332',
-  'M732 170 C690 222 650 280 630 334',
+  'M556 132 C470 150 330 190 215 322',
+  'M560 137 C500 172 420 232 345 326',
+  'M567 141 C542 190 502 262 472 330',
+  'M633 141 C648 190 660 262 668 330',
+  'M644 134 C692 160 732 232 754 322',
 ];
 
 function seatSVG(x, i) {
   return `<g>
-    <path class="sv-beyond" d="M${x - 30} 334 H${x - 12} M${x - 27} 334 V400 M${x - 6} 354 H${x + 12} V318 M${x + 4} 354 V400"/>
+    <path class="sv-desk" d="M${x - 48} 331 H${x - 14} V338 H${x - 42} V390 H${x - 48} Z"/>
+    <path class="sv-beyond" d="M${x - 18} 338 V400 M${x - 45} 390 V400 M${x - 6} 357 L${x - 8} 400 M${x + 12} 357 L${x + 16} 400"/>
+    <path class="sv-chair" d="M${x + 15} 316 L${x + 13} 356 H${x - 8}"/>
     <g class="person" data-seat="${i}">
       <path d="M${x} 352 L${x - 3} 310 M${x - 2} 318 L${x - 15} 333 M${x} 352 H${x - 20} L${x - 22} 400"/>
       <circle cx="${x - 5}" cy="300" r="8"/>
@@ -210,6 +213,8 @@ function seatSVG(x, i) {
 }
 
 function buildRoomSVG() {
+  const glazing = [];
+  for (let x = 160; x <= 770; x += 61) glazing.push(`M${x} 170 V252`);
   $('draw').innerHTML = `
 <svg id="room" viewBox="30 10 778 458" role="img" aria-labelledby="roomTitle roomDesc">
   <title id="roomTitle">Section drawing of the selected room</title>
@@ -221,9 +226,12 @@ function buildRoomSVG() {
 
   <rect class="offh" x="60" y="116" width="720" height="284" fill="url(#offh)"/>
 
-  <path class="sv-poche" d="M40 52 H800 V420 H40 Z M60 72 H780 V400 H60 Z M780 196 H800 V330 H780 Z"/>
-  <path class="sv-thin" d="M786 196 V330 M794 196 V330"/>
+  <path class="sv-poche" d="M40 52 H800 V420 H40 Z M60 72 H780 V400 H60 Z"/>
   <line class="sv-thin" x1="60" y1="116" x2="780" y2="116"/>
+
+  <path class="sv-far" d="M160 170 H770 V252 H160 Z ${glazing.join(' ')}"/>
+  <path class="sv-thin" d="M180 116 V126 M240 116 V126 M170 126 H250 V131 H170 Z M340 116 V126 M400 116 V126 M330 126 H410 V131 H330 Z"/>
+  <path class="sv-thin" d="M63 116 H71 V123 H63 Z M67 123 V300"/>
 
   <g class="door">
     <rect class="door-gap" x="74" y="246" width="64" height="154"/>
@@ -238,8 +246,8 @@ function buildRoomSVG() {
   <path id="coneFlash" class="cone-flash" d="M300 134 L80 400 H540 Z"/>
 
   <g id="seats">${SEAT_X.map(seatSVG).join('')}</g>
-  <text id="plusN" class="plus" x="772" y="282"></text>
-  <g id="unknown">${[1, 5, 9].map((i) => `<text class="unk" x="${SEAT_X[i] - 5}" y="318">?</text>`).join('')}</g>
+  <text id="plusN" class="plus" x="774" y="276"></text>
+  <g id="unknown">${[1, 4, 6].map((i) => `<text class="unk" x="${SEAT_X[i] - 5}" y="318">?</text>`).join('')}</g>
 
   <g id="walker" class="walker" style="transform: translate(${DOOR_X}px, ${WALK_Y}px)">
     <line class="limb a1" x1="-1" y1="-38" x2="-1" y2="-12"/>
@@ -252,19 +260,27 @@ function buildRoomSVG() {
 
   <rect class="ghost-ring" x="68" y="124" width="704" height="268" rx="2"/>
 
+  <g class="projector">
+    <line class="sv-thin" x1="442" y1="72" x2="442" y2="138"/>
+    <rect class="sv-body" x="424" y="138" width="36" height="16" rx="2"/>
+    <rect class="sv-body" x="419" y="143" width="5" height="6"/>
+  </g>
+
   <g class="air">${AIR.map((d) => `<path d="${d}"/>`).join('')}</g>
   <g class="ac">
-    <rect class="sv-body" x="692" y="124" width="86" height="34" rx="4"/>
-    <line class="sv-thin" x1="698" y1="136" x2="772" y2="136"/>
-    <line class="louvre" x1="706" y1="159" x2="748" y2="159"/>
+    <rect class="ac-body" x="566" y="88" width="68" height="28" rx="2"/>
+    <rect class="sv-body" x="552" y="116" width="96" height="11" rx="2"/>
+    <line class="sv-thin" x1="576" y1="121.5" x2="624" y2="121.5"/>
+    <line class="louvre l1" x1="556" y1="129" x2="572" y2="129"/>
+    <line class="louvre l2" x1="628" y1="129" x2="644" y2="129"/>
   </g>
 
   <g class="relay">
-    <path class="wire" d="M664 95 H735 V124"/>
-    <line class="sv-thin" x1="640" y1="72" x2="640" y2="82"/>
-    <rect class="sv-body" x="616" y="82" width="48" height="26" rx="3"/>
-    <circle class="led" cx="630" cy="95" r="4.5"/>
-    <g class="lever"><line x1="650" y1="101" x2="650" y2="87"/><circle cx="650" cy="87" r="2.5"/></g>
+    <path class="wire" d="M676 97 H634"/>
+    <line class="sv-thin" x1="700" y1="72" x2="700" y2="84"/>
+    <rect class="sv-body" x="676" y="84" width="48" height="26" rx="3"/>
+    <circle class="led" cx="690" cy="97" r="4.5"/>
+    <g class="lever"><line x1="710" y1="103" x2="710" y2="89"/><circle cx="710" cy="89" r="2.5"/></g>
   </g>
 
   <g class="pir">
@@ -274,13 +290,13 @@ function buildRoomSVG() {
   </g>
 
   <g class="callouts">
-    <path class="sv-leader" d="M300 40 V116 M652 40 V82"/>
+    <path class="sv-leader" d="M300 40 V116 M700 40 V72"/>
     <circle class="sv-dot" cx="300" cy="116" r="3"/>
-    <circle class="sv-dot" cx="652" cy="82" r="3"/>
+    <circle class="sv-dot" cx="700" cy="72" r="3"/>
     <text id="lPir" class="sv-lbl" x="308" y="32" text-anchor="end"></text>
-    <text id="lRelay" class="sv-lbl" x="664" y="32" text-anchor="end"></text>
-    <text id="lAc" class="sv-lbl" x="682" y="147" text-anchor="end"></text>
-    <text id="lSend" class="sv-lbl sv-send" x="74" y="232"></text>
+    <text id="lRelay" class="sv-lbl" x="712" y="32" text-anchor="end"></text>
+    <text id="lAc" class="sv-lbl" x="556" y="107" text-anchor="end"></text>
+    <text id="lSend" class="sv-lbl sv-send" x="76" y="156"></text>
   </g>
   <text id="lTitle" class="sv-title" x="40" y="456"></text>
 </svg>`;
@@ -304,8 +320,8 @@ function drawRoom(r, v, g) {
   svg.classList.toggle('s-ghost', v === 'ghost');
   svg.classList.toggle('s-setback', v === 'setback');
   const people = v === 'offline' ? 0 : Number(r.people) || 0;
-  setPeople(svg, Math.min(people, 12));
-  $('plusN').textContent = people > 12 ? `+${people - 12}` : '';
+  setPeople(svg, Math.min(people, ORDER.length));
+  $('plusN').textContent = people > ORDER.length ? `+${people - ORDER.length}` : '';
 
   let pir = 'PIR · NO MOTION';
   if (v === 'offline') pir = 'PIR · NO SIGNAL';
@@ -323,7 +339,7 @@ function drawRoom(r, v, g) {
 async function playWalkIn(before, after) {
   if (reduceMotion.matches) return;
   const svg = $('room'), walker = $('walker');
-  const seat = ORDER[Math.min(Number(before.people) || 0, 11)];
+  const seat = ORDER[Math.min(Number(before.people) || 0, ORDER.length - 1)];
   const x = SEAT_X[seat];
   walker.classList.add('on', 'walking');
   const walk = walker.animate(

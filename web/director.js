@@ -6,14 +6,18 @@
   const q = new URLSearchParams(location.search);
   if (!q.has('director')) return;
   const FAST = q.has('fast');                      // dev only: no waiting, no gliding
+  const FILM = q.has('film');                      // being filmed frame by frame (video/film.mjs): no on-screen hints
   const wait = (ms) => new Promise((r) => setTimeout(r, FAST ? 20 : ms));
+  // a pause for the viewer to read; ?p3=1.4 makes section 3's pauses 40% longer, to fit a voice-over
+  let section = '0';
+  const hold = (ms) => wait(ms * (Number(q.get('p' + section)) || 1));
   const $$ = (s) => document.querySelector(s);
   const root = document.documentElement, body = document.body;
 
   const css = document.createElement('style');
   css.textContent = `
     html.directing { overflow: hidden; height: 100%; background: #F2F5F8; }
-    html.directing body { transform-origin: 0 0; transition: transform ${FAST ? 0 : 1.15}s cubic-bezier(.45, 0, .2, 1); will-change: transform; }
+    html.directing body { transform-origin: 0 0; transition: transform ${FAST ? 0 : 1.15}s cubic-bezier(.45, 0, .2, 1); }
     html.directing #tip { display: none !important; }
     #dcur { position: absolute; left: 0; top: 0; width: 34px; height: 34px; z-index: 90; pointer-events: none; opacity: 0;
             transition: transform ${FAST ? 0 : .75}s cubic-bezier(.4, 0, .2, 1), opacity .3s; filter: drop-shadow(0 2px 3px rgba(15, 26, 43, .35)); }
@@ -91,6 +95,7 @@
   const hideCur = () => cur.classList.remove('on');
 
   function note(text, ms = 5000) {
+    if (FILM) { console.warn('director: ' + text); return; }
     const n = $$('#dnote'); n.textContent = text; n.classList.remove('off');
     clearTimeout(note.t); note.t = setTimeout(() => n.classList.add('off'), ms);
   }
@@ -108,13 +113,13 @@
       const asking = ask(chip.textContent);
       await wait(900); hideCur();
       await asking;
-      await wait(5200);
+      await hold(5200);
       await focus(null);
     },
     // 2 · The campus in 3D
     2: async () => {
       setView('campus');
-      await focus('#bldg', { max: 1.75 }); await wait(1400);
+      await focus('#views', { to: '#scene', max: 1.6 }); await hold(1400);
       // turn the model once, the way a hand would
       const scene = $$('#scene'), from = rz, t0 = performance.now(), dur = FAST ? 60 : 5200;
       scene.classList.add('dragging');
@@ -132,11 +137,11 @@
       const g = ghostRoom() || DEMO, blk = roomOf(g).block;
       const seg = document.querySelector(`.seg[data-view="${blk}"]`);
       await moveTo(seg); await press(); setView(blk);
-      await wait(2300);
+      await hold(2300);
       await focus('#scene', { max: 2.1 });
       const tile = document.querySelector(`.tiles .win[data-room="${g}"]`);
       if (tile) { await moveTo(tile); await wait(700); await press(); select(g, false); }
-      await wait(1800); hideCur();
+      await hold(1800); hideCur();
       await focus('.bench', { max: 1.25 });
     },
     // 3 · The ghost room: timetable against sensors
@@ -144,9 +149,9 @@
       const g = ghostRoom();
       if (!g) return note('No ghost room right now. Turn on demo mode, or run resetDemo().');
       if (sel !== g) select(g, false);
-      await focus('.room-head', { to: '#draw', max: 1.7 }); await wait(3200);
-      await focus('.facts', { max: 2.1, dy: -40 }); await wait(4200);
-      await focus('#draw', { max: 1.95 }); await wait(5200);
+      await focus('.room-head', { to: '#draw', max: 1.7 }); await hold(3200);
+      await focus('.facts', { max: 2.1, dy: -40 }); await hold(4200);
+      await focus('#draw', { max: 1.95 }); await hold(5200);
       await focus('.room-head', { to: '#draw', max: 1.7 });
     },
     // 4 · Turn on Eco Mode
@@ -159,8 +164,8 @@
       await wait(1200); hideCur();
       await focus('#draw', { max: 1.95 });
       await doing;
-      await wait(4200);
-      await focus('.room-head', { to: '#draw', max: 1.7 }); await wait(2200);
+      await hold(4200);
+      await focus('.room-head', { to: '#draw', max: 1.7 }); await hold(2200);
     },
     // 5 · Walk in: sensors always win
     5: async () => {
@@ -170,18 +175,18 @@
       await wait(1200); hideCur();
       await focus('#draw', { max: 1.95 });
       await doing;
-      await wait(4200);
-      await focus(null); await wait(1500);
+      await hold(4200);
+      await focus(null); await hold(1500);
     },
     // 6 · Two more truths: in use but not booked, and a dead sensor
     6: async () => {
       const show = async (i) => {
-        await focus('#bldg', { max: 1.75 });
+        await focus('#scene', { to: '.examples', max: 1.5 });
         const b = document.querySelectorAll('.ex')[i];
         if (!b || !b.dataset.ex) { note('No room of that kind right now.'); return; }
         await moveTo(b); await press(); select(b.dataset.ex, false);
-        await wait(2000); hideCur();
-        await focus('.room-head', { to: '#draw', max: 1.7 }); await wait(5200);
+        await hold(2000); hideCur();
+        await focus('.room-head', { to: '#draw', max: 1.7 }); await hold(5200);
       };
       await show(1);
       await show(2);
@@ -189,8 +194,8 @@
     },
     // 7 · For students: the rooms that are really free
     7: async () => {
-      await focus('.lists', { max: 1.6 }); await wait(2500);
-      await focus(document.querySelectorAll('.list-panel')[1], { max: 2 }); await wait(4500);
+      await focus('.lists', { max: 1.6 }); await hold(2500);
+      await focus(document.querySelectorAll('.list-panel')[1], { max: 2 }); await hold(4500);
       await focus(null);
     },
   };
@@ -198,7 +203,7 @@
   let running = false;
   async function play(n) {
     if (running || !S || !SECTIONS[n]) return;
-    running = true;
+    running = true; section = String(n);
     try { await SECTIONS[n](); } catch (err) { note('Section stopped: ' + err.message, 8000); } finally { hideCur(); running = false; }
   }
 

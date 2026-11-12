@@ -6,11 +6,16 @@
 - GhostRoom compares APU's real timetable with live room occupancy (simulated Wi-Fi device counts and motion sensors) and marks each room: in use, free, ghost, or sensor offline.
 - It emails a waste report every morning with nobody clicking. One Approve click sets the (simulated) aircon back, and motion in the room brings it back.
 
-- **Live demo:** https://ghostroom-mu.vercel.app
-- **Video:** [FILL: video URL]
-- **Team:** The Team: Wong Jia Hern (team leader), Chan Hao Wen, Lim Jia Qi, Brandon Wong King Nang, Ooi Wei Yee
+## Live demo: 
+https://ghostroom-mu.vercel.app
+
+## Video:
+[![Video Title](https://img.youtube.com/vi/TcWK18kHbVM/0.jpg)](https://www.youtube.com/watch?v=TcWK18kHbVM)
+
+**Team:** The Team: Wong Jia Hern (leader), Chan Hao Wen, Lim Jia Qi, Brandon Wong King Nang, Ooi Wei Yee
 
 Track 1, Smart Campus & Student Experience. APU Cloud Innovation Hackathon 2026, theme "When Cloud, IoT, and Network Converge".
+
 
 ## What you can try in 60 seconds
 

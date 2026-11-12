@@ -72,12 +72,15 @@
   </section>
 
   <section class="bench" aria-label="Campus and selected room">
-    <div class="panel building" aria-labelledby="campusTitle">
+    <div class="panel building" id="bldg" aria-labelledby="campusTitle">
       <div class="panel-head">
         <h2 id="campusTitle">Campus now</h2>
-        <p class="panel-sub">Every window is a room. Click one to open it.</p>
+        <div id="views" class="views" role="group" aria-label="Building view"></div>
       </div>
+      <p class="panel-sub"><span class="only-3d">Pick a block, then click a room. Drag to turn the model.</span><span class="only-flat">Every window is a room. Click one to open it.</span></p>
       <p id="legend" class="legend"></p>
+      <div id="scene" class="scene grid-bg" aria-label="3D model of the campus"><div id="world" class="world"></div></div>
+      <p class="scene-note only-3d">Sketch from APU's campus map. Not to scale.</p>
       <div id="blocks" class="blocks"></div>
       <nav class="examples" aria-label="Example rooms">
         <span id="exLabel" class="label">Examples right now</span>

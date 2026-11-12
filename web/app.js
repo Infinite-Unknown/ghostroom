@@ -349,6 +349,102 @@ async function playWalkIn(before, after) {
   walk.cancel();
 }
 
+// ---------------- the 3D campus ----------------
+// A sketch of the campus from APU's own campus map, drawn in a frame where the teaching blocks run left to right.
+// Not to scale. Rooms sit on their real floor; their order along a floor is the timetable's, not surveyed.
+// ponytail: plain CSS 3D transforms, no WebGL library. The room tiles stay real <button>s.
+const LH = 20;        // one storey, in scene units
+const SLAB = 6;       // thickness of a floor plate
+const EXPLODE = 36;   // extra space between plates when a block is opened
+const TILT = 60;      // camera tilt, degrees
+const CAMPUS = [
+  { id: 'SPINE', name: 'Spine', x: 560, y: 40, w: 100, d: 580, levels: 4 },
+  { id: 'E', name: 'Block E', x: 250, y: 150, w: 310, d: 65, levels: 8 },
+  { id: 'CP', name: 'Centre Point', x: 380, y: 236, w: 180, d: 54, levels: 2 },
+  { id: 'D', name: 'Block D', x: 270, y: 310, w: 290, d: 70, levels: 9 },
+  { id: 'B', name: 'Block B', x: 310, y: 420, w: 250, d: 70, levels: 9 },
+  { id: 'C', name: 'Block C', x: 660, y: 150, w: 200, d: 65, levels: 9 },
+  { id: 'A', name: 'Block A', x: 660, y: 300, w: 150, d: 70, levels: 7 },
+  { id: 'K2', name: 'K2', x: 330, y: -10, w: 170, d: 40, levels: 12 },
+  { id: 'K1', name: 'K1', x: 330, y: 44, w: 170, d: 40, levels: 12 },
+  { id: 'J2', name: 'J2', x: 130, y: 20, w: 170, d: 40, levels: 12 },
+  { id: 'J1', name: 'J1', x: 130, y: 74, w: 170, d: 40, levels: 12 },
+];
+let view3 = null;     // 'campus', or the letter of the block that is opened
+let flat = false;     // the flat elevations instead of the model
+let rz = -24;         // camera turn, degrees
+
+const boxHTML = (cls, m, h, top, attrs) => `<div class="box ${cls}" ${attrs || ''} style="left:${m.x}px;top:${m.y}px;width:${m.w}px;height:${m.d}px;--h:${h}px">
+  <div class="f top">${top || ''}</div><i class="f front"></i><i class="f back"></i><i class="f left"></i><i class="f right"></i></div>`;
+
+function build3D() {
+  const tracked = [...new Set(S.rooms.map((r) => r.block))].sort();
+  const parts = ['<div class="g3-ground" style="left:60px;top:-70px;width:870px;height:760px"></div>'];
+  CAMPUS.forEach((m) => {
+    parts.push(`<div class="foot" style="left:${m.x}px;top:${m.y}px;width:${m.w}px;height:${m.d}px"></div>`);
+    if (!tracked.includes(m.id)) {
+      parts.push(boxHTML('mass', m, m.levels * LH, `<span class="m-name">${esc(m.name)}</span>`));
+      return;
+    }
+    const rooms = S.rooms.filter((r) => r.block === m.id);
+    const floors = [...new Set(rooms.map((r) => Number(r.floor)))].sort((a, b) => a - b);
+    const onFloor = (f) => rooms.filter((r) => Number(r.floor) === f).sort((a, c) => a.room.localeCompare(c.room));
+    const cols = Math.max(...floors.map((f) => onFloor(f).length));
+    const tw = Math.floor((m.w - 42 - (cols - 1) * 4) / cols);
+    const plates = floors.map((f, i) => boxHTML('plate', m, SLAB,
+      `<span class="p-fl">F${f}</span><div class="tiles">${onFloor(f)
+        .map((r) => `<button class="win" type="button" data-room="${esc(r.room)}" style="width:${tw}px"></button>`).join('')}</div>`,
+      `data-floor="${f}" data-i="${i}"`)).join('');
+    parts.push(`<div class="tower" data-block="${esc(m.id)}">${boxHTML('plinth', m, (floors[0] - 1) * LH - 3)}${plates}
+      <span class="t-name" style="left:${m.x}px;top:${m.y + m.d + 8}px">${esc(m.name)}</span></div>`);
+  });
+  $('world').innerHTML = parts.join('');
+  const inModel = tracked.filter((b) => CAMPUS.some((c) => c.id === b));
+  $('views').innerHTML = [['campus', 'Campus'], ...inModel.map((b) => [b, `Block ${b}`]), ['flat', 'Flat']]
+    .map(([v, t]) => `<button class="seg" type="button" data-view="${esc(v)}">${esc(t)}</button>`).join('');
+  if (!view3) {
+    const b = (roomOf(sel) || {}).block;
+    view3 = inModel.includes(b) ? b : 'campus';
+  }
+}
+
+// Puts every plate at its height and points the camera at the campus or at the opened block.
+function place3D() {
+  const scene = $('scene'), world = $('world');
+  $('bldg').classList.toggle('is-flat', flat);
+  $('views').querySelectorAll('.seg').forEach((b) => b.setAttribute('aria-pressed', String(flat ? b.dataset.view === 'flat' : b.dataset.view === view3)));
+  if (flat || !world.firstChild) return;
+  const m = CAMPUS.find((c) => c.id === view3);
+  let top = 0;
+  world.classList.toggle('focus', !!m);
+  world.querySelectorAll('.tower').forEach((t) => {
+    const open = t.dataset.block === view3;
+    t.classList.toggle('away', !!m && !open);
+    t.querySelectorAll('.plate').forEach((p) => {
+      const z = (Number(p.dataset.floor) - 1) * LH + (open ? Number(p.dataset.i) * EXPLODE : 0);
+      p.style.transform = `translateZ(${z}px)`;
+      if (open) top = Math.max(top, z + SLAB);
+    });
+  });
+  const W = scene.clientWidth, H = scene.clientHeight, k = Math.PI / 180;
+  const sin = Math.sin(TILT * k), cos = Math.cos(TILT * k), a = Math.abs(rz) * k;
+  let cx = 485, cy = 300, cz = 75, zoom = Math.min(W / 800, H / 610);
+  if (m) {
+    cx = m.x + m.w / 2; cy = m.y + m.d / 2; cz = top / 2;
+    const wide = m.w * Math.cos(a) + m.d * Math.sin(a) + 50;
+    const tall = top * sin + (m.w * Math.sin(a) + m.d * Math.cos(a)) * cos + 70;
+    zoom = Math.min(1.8, W / wide, H / tall);
+  }
+  world.style.transform = `scale(${zoom.toFixed(3)}) rotateX(${TILT}deg) rotateZ(${rz}deg) translate3d(${-cx}px, ${-cy}px, ${-cz}px)`;
+}
+
+function setView(v) {
+  if (v === 'flat') flat = true;
+  else { flat = false; view3 = v; }
+  $('tip').hidden = true;
+  place3D();
+}
+
 // ---------------- the building ----------------
 function renderBuilding() {
   const host = $('blocks');
@@ -367,17 +463,21 @@ function renderBuilding() {
     const perFloor = {};
     S.rooms.forEach((r) => { const k = `${r.block}-${r.floor}`; perFloor[k] = (perFloor[k] || 0) + 1; });
     host.style.setProperty('--cols', Math.max(1, ...Object.values(perFloor)));
+    build3D();
+    place3D();
   }
   const counts = { inuse: 0, free: 0, ghost: 0, setback: 0, offline: 0 };
-  host.querySelectorAll('.win').forEach((w) => {
+  S.rooms.forEach((r) => { counts[view(r)]++; });
+  $('bldg').querySelectorAll('.win[data-room]').forEach((w) => {
     const r = roomOf(w.dataset.room);
     if (!r) return;
     const v = view(r);
-    counts[v]++;
     w.className = `win ${v}${r.room === sel ? ' sel' : ''}`;
     w.setAttribute('aria-pressed', r.room === sel ? 'true' : 'false');
     w.setAttribute('aria-label', `${r.room}, ${WORD[v].toLowerCase()}, ${r.people == null ? 'no signal' : plural(r.people, 'person', 'people')}`);
   });
+  // a floor with a ghost room shows a purple edge, so ghosts are visible on the closed model too
+  $('world').querySelectorAll('.plate').forEach((p) => p.classList.toggle('has-ghost', !!p.querySelector('.win.ghost')));
   const sw = (v) => `<span><i class="win ${v}" aria-hidden="true"></i>${WORD[v]} <b>${counts[v]}</b></span>`;
   $('legend').innerHTML = ['inuse', 'free', 'ghost', 'setback', 'offline'].map(sw).join('');
 }
@@ -408,6 +508,8 @@ function select(id, scroll) {
   if (busy || !roomOf(id)) return;
   if (id !== sel) $('actMsg').textContent = '';
   sel = id;
+  const blk = roomOf(id).block;
+  if (!flat && view3 !== blk && CAMPUS.some((c) => c.id === blk) && $('world').querySelector(`.tower[data-block="${blk}"]`)) setView(blk);
   renderHero();
   renderBuilding();
   renderExamples();
@@ -606,6 +708,35 @@ function init() {
   blocks.addEventListener('pointerout', (e) => { if (e.target.closest('.win')) $('tip').hidden = true; });
   blocks.addEventListener('focusin', (e) => { const w = e.target.closest('.win'); if (w) showTip(w); });
   blocks.addEventListener('focusout', () => { $('tip').hidden = true; });
+
+  const scene = $('scene');
+  let drag = null, dragged = false;
+  scene.addEventListener('click', (e) => {
+    if (dragged) { dragged = false; return; }
+    const w = e.target.closest('.win');
+    if (w) { select(w.dataset.room, true); return; }
+    const t = e.target.closest('.tower');
+    if (t && t.dataset.block !== view3) setView(t.dataset.block);
+  });
+  scene.addEventListener('pointerover', (e) => { const w = e.target.closest('.win'); if (w) showTip(w); });
+  scene.addEventListener('pointerout', (e) => { if (e.target.closest('.win')) $('tip').hidden = true; });
+  scene.addEventListener('focusin', (e) => { const w = e.target.closest('.win'); if (w) showTip(w); });
+  scene.addEventListener('focusout', () => { $('tip').hidden = true; });
+  // drag sideways to turn the model
+  scene.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, rz }; dragged = false; });
+  addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x;
+    if (!dragged && Math.abs(dx) < 6) return;
+    dragged = true;
+    scene.classList.add('dragging');
+    $('tip').hidden = true;
+    rz = Math.max(-60, Math.min(30, drag.rz + dx * 0.25));
+    place3D();
+  });
+  addEventListener('pointerup', () => { drag = null; scene.classList.remove('dragging'); setTimeout(() => { dragged = false; }, 0); });
+  $('views').addEventListener('click', (e) => { const b = e.target.closest('.seg'); if (b) setView(b.dataset.view); });
+  new ResizeObserver(() => { if (S) place3D(); }).observe(scene);
   addEventListener('scroll', () => { $('tip').hidden = true; }, { passive: true });
 
   $('ghostList').addEventListener('click', (e) => { const b = e.target.closest('[data-review]'); if (b) select(b.dataset.review, true); });

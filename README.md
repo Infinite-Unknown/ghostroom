@@ -16,7 +16,7 @@ Track 1, Smart Campus & Student Experience. APU Cloud Innovation Hackathon 2026,
 
 Open https://ghostroom-mu.vercel.app
 
-1. Click a window in the building drawing. The room opens as a cutaway.
+1. In the 3D campus model, click **Block B** or **Block D**. The block opens floor by floor. Click a room tile and the room opens as a cutaway. (Drag to turn the model. **Flat** shows the same rooms as plain elevations, and is what phones get.)
 2. Read the two lines: **Timetable says** (what is booked) and **Sensors say** (what is really there).
 3. Use the **Ask Room Scout** box at the top and ask, for example, "Which rooms are really free right now?" It answers only from the live rows.
 4. Eco Mode needs a ghost room. Click **A ghost room** under the building, then **Turn on Eco Mode**: the air in the drawing stops and the room turns green. Then click **Walk in**: motion comes back and the aircon returns.
@@ -127,7 +127,7 @@ The virtual ESP32 sketch is in [`wokwi/`](wokwi/README.md): paste it into a new 
 ```
 apps-script/   Code.gs (engine, triggers, web app, email, Room Scout), Timetable.gs (generated),
                dashboard.html (Apps Script's own page), DEPLOY.md
-web/           static website on Vercel: building view, room cutaway, Approve, Walk in, Room Scout
+web/           static website on Vercel: 3D campus model, room cutaway, Eco Mode, Walk in, Room Scout
 wokwi/         virtual ESP32 firmware (sketch.ino, diagram.json) as backup
 scripts/       fetch-timetable.mjs (refresh the timetable), run-selftest.mjs (engine tests in Node)
 data/          timetable-snapshot.json (APU public feed, identifiers stripped)
@@ -140,6 +140,7 @@ data/          timetable-snapshot.json (APU public feed, identifiers stripped)
 - A click takes about 8 seconds, because the Sheet is rewritten each time.
 - The timetable snapshot covers 26 Oct to 22 Nov 2026. After that, the same weekday from the last real week is reused.
 - Room capacities are not in the feed, so they are stable made-up sizes.
+- The 3D campus is a sketch from APU's campus map, not to scale. Rooms sit on their real floor; their order along a floor is not surveyed.
 
 ## Research
 

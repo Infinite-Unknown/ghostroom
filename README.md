@@ -120,7 +120,11 @@ The prototype rules do not require Gemini Enterprise. The finals product will us
    ```
 6. **Demo mode:** in the Sheet's `config` tab set `demo_scenario` to `demo`. Within 5 minutes `D-07-08` is a ghost, `B-05-03` is squatted and `B-08-01` is offline (demo bookings are 2 hours each, 06:30 to 22:30 MYT; the first 20 minutes of each are a grace period, so the room is not a ghost then). For another take, run `resetDemo()` in the Apps Script editor. Set `demo_scenario` back to `live` when done.
 
-The virtual ESP32 sketch is in [`wokwi/`](wokwi/README.md): paste it into a new Wokwi ESP32 project. It is backup firmware and is not part of the live demo.
+The virtual ESP32 sketch is in [`wokwi/`](wokwi/README.md): paste it into a new Wokwi ESP32 project. The website does not need it; the **Walk in** button sends the same kind of reading.
+
+![The virtual ESP32 running on Wokwi](wokwi/wokwi-esp32.png)
+
+*The virtual ESP32 running on Wokwi. This is a simulation, not real hardware. It joins Wi-Fi, posts a reading to the web app over HTTPS, reads the aircon state back, and lights the LED that stands in for the aircon relay. Wokwi's free Wi-Fi gateway is sometimes busy, so a run may need a second try.*
 
 ## Repo map
 

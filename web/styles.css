@@ -12,8 +12,11 @@
   --warn: #B4530A;
   --offline: #8A94A3;
   --grid: rgba(213, 220, 228, .35);
-  --head: 'Bricolage Grotesque', system-ui, sans-serif;
-  --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  /* One family: Inter (rsms.me/inter). --mono is kept as a name for codes, times and drawing labels;
+     they are Inter with tabular figures and a slashed zero (see the last rule in this file). */
+  --sans: InterVariable, Inter, system-ui, sans-serif;
+  --head: var(--sans);
+  --mono: var(--sans);
 }
 
 * { box-sizing: border-box; }
@@ -22,10 +25,11 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font: 17px/1.5 'IBM Plex Sans', system-ui, sans-serif;
+  font: 17px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
 }
 h1, h2, p { margin: 0; }
-h2 { font: 600 24px/1.2 var(--head); letter-spacing: -.01em; }
+h2 { font: 650 24px/1.2 var(--head); letter-spacing: -.018em; }
 button, input { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .mono { font-family: var(--mono); }
@@ -55,11 +59,11 @@ button, input { font: inherit; color: inherit; }
 .mast :focus-visible { outline-color: #fff; }
 .mast-grid { display: grid; grid-template-columns: 5fr 7fr; gap: 48px; align-items: center; }
 .mast-top { display: flex; align-items: center; gap: 18px; }
-.wordmark { font: 700 22px/1 var(--head); letter-spacing: -.01em; }
+.wordmark { font: 700 22px/1 var(--head); letter-spacing: -.02em; }
 .stamp { font-size: 13px; font-weight: 500; letter-spacing: .06em; color: rgba(255, 255, 255, .72); font-variant-numeric: tabular-nums; }
 .stamp.live::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: #3DDC97; vertical-align: 1px; }
 .stamp.stale { color: #FFB86B; }
-.pitch { font: 600 clamp(26px, 2.3vw, 38px)/1.12 var(--head); letter-spacing: -.02em; margin-top: 18px; }
+.pitch { font: 650 clamp(24px, 2.4vw, 37px)/1.15 var(--head); letter-spacing: -.022em; margin-top: 18px; }
 .pitch span { display: block; color: rgba(255, 255, 255, .58); }
 .mast-sub { margin-top: 14px; max-width: 48ch; color: rgba(255, 255, 255, .74); }
 
@@ -116,7 +120,7 @@ button, input { font: inherit; color: inherit; }
 .numbers { display: grid; grid-template-columns: repeat(4, 1fr); margin: 30px 0 26px; }
 .num { display: flex; flex-direction: column; padding: 2px 28px; border-left: 1px solid var(--line); }
 .num:first-child { border-left: 0; padding-left: 0; }
-.big { font: 700 56px/1 var(--head); font-variant-numeric: tabular-nums; letter-spacing: -.025em; }
+.big { font: 700 56px/1 var(--head); font-variant-numeric: tabular-nums; letter-spacing: -.035em; white-space: nowrap; }
 .num-lbl { font-weight: 500; font-size: 19px; margin-top: 8px; }
 .num-sub { color: var(--ink-2); }
 
@@ -173,10 +177,10 @@ button, input { font: inherit; color: inherit; }
 /* ---------- the selected room ---------- */
 .room { padding: 24px 28px 20px; display: flex; flex-direction: column; }
 .room-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px 32px; }
-.code { font-size: 50px; font-weight: 500; line-height: 1; letter-spacing: -.02em; white-space: nowrap; }
+.code { font-size: 50px; font-weight: 650; line-height: 1; letter-spacing: -.03em; white-space: nowrap; }
 .meta { color: var(--ink-2); margin-top: 8px; }
 .verdict { text-align: right; max-width: 34ch; }
-.v-word { font: 700 42px/1 var(--head); letter-spacing: -.01em; transition: color .3s; }
+.v-word { font: 750 42px/1 var(--head); letter-spacing: -.02em; transition: color .3s; }
 .v-word.ghost { color: var(--ghost); }
 .v-word.free { color: var(--free); }
 .v-word.setback { color: var(--eco); }
@@ -324,7 +328,7 @@ button, input { font: inherit; color: inherit; }
   .chip { min-height: 44px; border-radius: 4px; }
   .numbers { margin: 18px 0; }
   .num { padding: 12px; }
-  .big { font-size: 34px; }
+  .big { font-size: 29px; }
   .num-lbl { font-size: 16px; }
   .building { padding: 20px 14px; }
   .block { --fl: 26px; --gap: 4px; --wh: 1.1; }
@@ -359,3 +363,7 @@ button, input { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition-duration: .15s !important; transition-delay: 0s !important; }
 }
+
+/* Codes, times and drawing labels: tabular figures and a slashed zero, so they read like a drawing sheet.
+   Keep this last: the `font` shorthand above resets font-feature-settings. */
+.mono, .label, .sv-lbl, .sv-title, .unk, .plus, .r-code, .r-t, .worst .link { font-feature-settings: 'tnum', 'zero'; }

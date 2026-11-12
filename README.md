@@ -8,7 +8,7 @@
 
 - **Live demo:** https://ghostroom-mu.vercel.app
 - **Video:** [FILL: video URL]
-- **Team:** The Team (Wong Jia Hern)
+- **Team:** The Team: Wong Jia Hern (team leader), Chan Hao Wen, Lim Jia Qi, Brandon Wong King Nang, Ooi Wei Yee
 
 Track 1, Smart Campus & Student Experience. APU Cloud Innovation Hackathon 2026, theme "When Cloud, IoT, and Network Converge".
 

@@ -169,7 +169,7 @@ function renderHero() {
   $('nearChip').textContent = 'I am near ' + r.room + '. Where is the closest room to study undisturbed?';
   $('meta').textContent = `Block ${r.block} · Floor ${r.floor} · ${r.capacity} seats`;
   // a few timetable rows have no module name
-  $('tt').textContent = r.scheduled_now ? `Booked${r.module ? ': ' + r.module : ''}, until ${r.class_ends}` : 'Nothing scheduled';
+  $('tt').textContent = r.scheduled_now ? `Booked${r.module && r.module !== 'null' ? ': ' + r.module : ''}, until ${r.class_ends}` : 'Nothing scheduled';
   if (v === 'offline') {
     $('sensors').textContent = `No signal since ${fmtTs(r.last_seen)}. We do not guess.`;
   } else {

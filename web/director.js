@@ -108,12 +108,15 @@
     1: async () => {
       await focus(null); await wait(900);
       await focus('.scout', { max: 2 });
+      await hold(2000);                             // the presenter is still saying what a student would ask
       const chip = $$('#nearChip');                 // "I am near <the selected room>. Where is the closest room to study undisturbed?"
       await moveTo(chip); await press();
       const asking = ask(chip.textContent);
       await wait(900); hideCur();
       await asking;
-      await hold(5200);
+      await hold(2600);
+      await focus('#msgs', { max: 2.4 });           // push in on the answer
+      await hold(2600);
       await focus(null);
     },
     // 2 · The campus in 3D
@@ -149,9 +152,9 @@
       const g = ghostRoom();
       if (!g) return note('No ghost room right now. Turn on demo mode, or run resetDemo().');
       if (sel !== g) select(g, false);
-      await focus('.room-head', { to: '#draw', max: 1.7 }); await hold(3200);
-      await focus('.facts', { max: 2.1, dy: -40 }); await hold(4200);
-      await focus('#draw', { max: 1.95 }); await hold(5200);
+      await focus('.room-head', { to: '#draw', max: 1.7 }); await hold(6400);   // "here is the room, staged as a ghost"
+      await focus('.facts', { max: 2.1, dy: -40 }); await hold(4200);           // "timetable says, sensors say"
+      await focus('#draw', { max: 1.95 }); await hold(2000);                    // "cold air into an empty room"
       await focus('.room-head', { to: '#draw', max: 1.7 });
     },
     // 4 · Turn on Eco Mode

@@ -98,6 +98,7 @@ const rm = (x) => `RM ${(Number(x) || 0).toFixed(2)}`;
 // ---------------- render ----------------
 function renderAll() {
   renderNumbers();
+  renderExamples();
   if (!busy) renderHero();
   renderBuilding();
   renderLists();
@@ -377,12 +378,35 @@ function renderBuilding() {
   $('legend').innerHTML = ['inuse', 'free', 'ghost', 'setback', 'offline'].map(sw).join('');
 }
 
+// ---------------- examples ----------------
+// Three kinds of room worth a look, picked from the live state. In demo mode the back end stages one of each.
+const EXAMPLES = [
+  { text: 'A ghost room', demo: 'D-07-08', is: (r) => view(r) === 'ghost' },
+  { text: 'In use, not booked', demo: 'B-05-03', is: (r) => r.status === 'IN_USE' && !r.scheduled_now && r.people > 0 },
+  { text: 'A dead sensor', demo: 'B-08-01', is: (r) => view(r) === 'offline' },
+];
+function exampleRoom(ex) {
+  const hits = S.rooms.filter(ex.is);
+  const staged = S.scenario === 'demo' && hits.find((r) => r.room === ex.demo);
+  return (staged || hits[0] || {}).room || '';
+}
+function renderExamples() {
+  $('exLabel').textContent = S.scenario === 'demo' ? 'Staged examples' : 'Examples right now';
+  const list = $('exList'), focused = [...list.children].indexOf(document.activeElement); // keep keyboard focus across the redraw
+  setHTML(list, EXAMPLES.map((ex) => {
+    const id = exampleRoom(ex);
+    return `<button class="ex" type="button" data-ex="${esc(id)}"${id ? '' : ' disabled'} aria-pressed="${id !== '' && id === sel}">${esc(ex.text)} <span class="mono">${id ? esc(id) : 'none right now'}</span></button>`;
+  }).join(''));
+  if (focused >= 0 && list.children[focused] !== document.activeElement) list.children[focused].focus({ preventScroll: true });
+}
+
 function select(id, scroll) {
   if (busy || !roomOf(id)) return;
   if (id !== sel) $('actMsg').textContent = '';
   sel = id;
   renderHero();
   renderBuilding();
+  renderExamples();
   if (scroll) {
     const box = $('hero').getBoundingClientRect();
     if (box.top < 0 || box.top > innerHeight * 0.5) $('hero').scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth', block: 'start' });
@@ -585,6 +609,8 @@ function init() {
   $('ghostList').addEventListener('click', (e) => { const b = e.target.closest('[data-review]'); if (b) select(b.dataset.review, true); });
   $('ghostMore').addEventListener('click', () => { expanded.ghost = !expanded.ghost; renderLists(); });
   $('freeMore').addEventListener('click', () => { expanded.free = !expanded.free; renderLists(); });
+
+  $('exList').addEventListener('click', (e) => { const b = e.target.closest('[data-ex]'); if (b && b.dataset.ex) select(b.dataset.ex, true); });
 
   $('approve').addEventListener('click', onApprove);
   $('walk').addEventListener('click', onWalk);
